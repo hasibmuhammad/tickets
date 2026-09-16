@@ -1,13 +1,16 @@
 import { Request, Response } from "express";
-import { pool } from "../../config/db";
+import { userService } from "./user.service";
 
 const createUser = async (req: Request, res: Response) => {
-  const { name, email } = req.body;
   try {
-    const result = await pool.query(
-      `INSERT INTO users(name, email) VALUES($1, $2) RETURNING *`,
-      [name, email],
-    );
+    const { name, email } = req.body;
+
+    const payload = {
+      name,
+      email,
+    };
+
+    const result = await userService.createUser(payload);
 
     res.status(201).json({
       success: true,
@@ -24,9 +27,7 @@ const createUser = async (req: Request, res: Response) => {
 
 const getUsers = async (req: Request, res: Response) => {
   try {
-    const result = await pool.query(
-      `SELECT * FROM users ORDER BY created_at DESC`,
-    );
+    const result = await userService.getUsers();
 
     res.status(200).json({
       success: true,
@@ -44,7 +45,7 @@ const getUsers = async (req: Request, res: Response) => {
 const getUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const result = await pool.query(`SELECT * FROM users WHERE id = $1`, [id]);
+    const result = await userService.getUser(id as string);
 
     if (result.rowCount && result.rowCount > 0) {
       res.status(200).json({
@@ -68,10 +69,13 @@ const updateUser = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, email } = req.body;
 
-    const result = await pool.query(
-      `UPDATE users SET name=$1, email=$2 WHERE id=$3 RETURNING *`,
-      [name, email, id],
-    );
+    const payload = {
+      name,
+      email,
+      id,
+    };
+
+    const result = await userService.updateUser(payload);
 
     if (result.rows.length === 0) {
       res.status(404).json({
@@ -97,7 +101,7 @@ const updateUser = async (req: Request, res: Response) => {
 const deleteUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const result = await pool.query(`DELETE FROM users WHERE id=$1`, [id]);
+    const result = await userService.deleteUser(id as string);
 
     if (result.rowCount) {
       res.status(200).json({
