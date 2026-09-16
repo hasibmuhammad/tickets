@@ -48,6 +48,9 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Welcome to the new world of AI");
 });
 
+/**
+ * User CRUD
+ */
 // Create user
 app.post("/users", async (req: Request, res: Response) => {
   const { name, email } = req.body;
@@ -154,14 +157,108 @@ app.delete("/users/:id", async (req: Request, res: Response) => {
     const result = await pool.query(`DELETE FROM users WHERE id=$1`, [id]);
 
     if (result.rowCount) {
-      res
-        .status(200)
-        .json({ success: true, message: "User Deleted Successfully" });
+      res.status(200).json({
+        success: true,
+        message: "User Deleted Successfully",
+        data: null,
+      });
     } else {
       res.status(404).json({ success: false, message: "User not found" });
     }
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * Tickets Crud
+ */
+// Create Ticket
+app.post("/tickets", async (req: Request, res: Response) => {
+  try {
+    const { user_id, title } = req.body;
+    // const userResult = await pool.query(`SELECT * from users WHERE id=$1`, [
+    //   user_id,
+    // ]);
+
+    // const userExist = userResult.rowCount;
+
+    // if (!userExist)
+    //   return res
+    //     .status(404)
+    //     .json({ success: false, message: "User not found" });
+
+    // create the ticket
+    const result = await pool.query(
+      `INSERT INTO tickets(title, user_id) VALUES($1, $2) RETURNING *`,
+      [title, user_id],
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Ticket created successfully",
+      data: result.rows[0],
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error);
+    }
+
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to create ticket" });
+  }
+});
+
+// Get all tickets
+app.get("/tickets", async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM tickets ORDER BY created_at DESC`,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: result.rows.length
+        ? "Successfully fetched all tickets"
+        : "No result found",
+      data: result.rows,
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error);
+    }
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch tickets" });
+  }
+});
+
+// Get single ticket
+app.get("/tickets/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(`SELECT * FROM tickets WHERE id=$1`, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Ticket not found",
+        data: null,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Fetched ticket successfully",
+      data: result.rows[0],
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error);
+    }
+
+    res.status(500).json({ success: false, message: "Failed fetch ticket" });
   }
 });
 
