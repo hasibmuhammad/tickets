@@ -262,6 +262,69 @@ app.get("/tickets/:id", async (req: Request, res: Response) => {
   }
 });
 
+// Update ticket
+app.put("/tickets/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { title } = req.body;
+    const result = await pool.query(
+      `UPDATE tickets SET title=$1 WHERE id=$2 RETURNING *`,
+      [title, id],
+    );
+
+    if (!result.rowCount) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Ticket not found", data: null });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Ticket updated successfully",
+      data: result.rows[0],
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error);
+    }
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to update ticket" });
+  }
+});
+
+// Delete ticket
+app.delete("/tickets/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(`DELETE FROM tickets WHERE id=$1`, [id]);
+
+    console.log(result);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Ticket not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Ticket Deleted Successfully",
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error);
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete the ticket",
+    });
+  }
+});
+
 // Server
 app.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
