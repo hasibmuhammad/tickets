@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import config from "./config";
 import initDB from "./config/db";
+import { authRoutes } from "./modules/auth/auth.routes";
 import { ticketRoutes } from "./modules/ticket/ticket.routes";
 import { userRoutes } from "./modules/user/user.routes";
 
@@ -18,6 +19,7 @@ app.get("/", (req: Request, res: Response) => {
 // Routes
 app.use("/users", userRoutes);
 app.use("/tickets", ticketRoutes);
+app.use("/auth", authRoutes);
 
 // Server
 app.listen(port, () => {

@@ -3,11 +3,12 @@ import { userService } from "./user.service";
 
 const createUser = async (req: Request, res: Response) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, password } = req.body;
 
     const payload = {
       name,
       email,
+      password,
     };
 
     const result = await userService.createUser(payload);
