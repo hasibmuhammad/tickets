@@ -11,7 +11,7 @@ const login = async (req: Request, res: Response) => {
 
     const user = await authService.login(payload);
 
-    if (user) {
+    if (user?.token) {
       return res.status(200).json({
         success: true,
         message: "User logged in successfully",
